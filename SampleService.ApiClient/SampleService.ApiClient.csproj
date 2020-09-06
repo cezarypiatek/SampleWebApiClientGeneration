@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <!--Automatically generate nuget package with client library-->
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+  <ItemGroup>
+    <!--Add required nuget packages necessary for ApiClient build-->
+    <PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="NSwag.MSBuild" Version="13.7.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <!--Add build time reference to SampleService project-->
+    <ProjectReference Include="..\SampleService\SampleService.csproj">
+      <Private>False</Private>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <NSwagInputs Include="../SampleService/bin/$(Configuration)/netcoreapp3.1/SampleService.dll"/>
+    <NSwagInputs Include="nswag.json"/>
+  </ItemGroup>
+  <!--Add build step responsible for generating the source code of client api and including it to compilation-->
+  <Target Name="GenerateApiClientSourceCode" BeforeTargets="CoreCompile;PrepareResource">
+    <Exec Command="$(NSwagExe_Core31) run nswag.json /variables:Configuration=$(Configuration),Output=$(IntermediateOutputPath)\ApiClient.generated.cs" />
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)\ApiClient.generated.cs" />
+    </ItemGroup>
+  </Target>
+</Project>
